@@ -12,5 +12,5 @@ protocol TelegramClientProtocol {
     var client: Client { get }
     func getURI(for method: String) -> URI
     
-    func sendMessage(chatID: Int, replyMessageID: Int?, text: String) -> EventLoopFuture<Void>
+    func sendMessage(chatID: Int, replyMessageID: Int?, text: String, replyMarkup: TelegramClientReplyMarkup?) -> EventLoopFuture<Void>
 }
