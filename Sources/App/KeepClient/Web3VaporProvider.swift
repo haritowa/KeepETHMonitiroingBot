@@ -11,9 +11,12 @@ import Web3
 
 extension RPCRequest: Content { }
 
+extension BigUInt: Content { }
+extension EthereumAddress: Content { }
+
 class Web3VaporProvider: Web3Provider {
     private let rpcURL: URI
-    private let client: Client
+    let client: Client
     
     init(rpcURL: URI, client: Client) {
         self.rpcURL = rpcURL
@@ -39,9 +42,11 @@ class Web3VaporProvider: Web3Provider {
 }
 
 extension Request {
-    func web3(rpcURL: URI) -> Web3 {
-        return Web3(
-            provider: Web3VaporProvider(rpcURL: rpcURL, client: self.client)
-        )
+    func web3Provider(rpcURL: URI) -> Web3VaporProvider {
+        Web3VaporProvider(rpcURL: rpcURL, client: self.client)
+    }
+    
+    var web3Provider: Web3VaporProvider {
+        web3Provider(rpcURL: "https://ropsten.infura.io/v3/63d33713d82b4b17bd9ca5fdc08a4509")
     }
 }
