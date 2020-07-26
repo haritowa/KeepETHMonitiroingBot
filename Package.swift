@@ -16,7 +16,8 @@ let package = Package(
             name: "App",
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
-                .product(name: "Web3", package: "Web3")
+                .product(name: "Web3", package: "Web3"),
+                .product(name: "Web3ContractABI", package: "Web3")
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
