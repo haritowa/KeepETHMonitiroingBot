@@ -38,3 +38,9 @@ extension Request {
         KeepClient(provider: web3Provider)
     }
 }
+
+extension Application {
+    var keepClient: KeepClientProtocol {
+        KeepClient(provider: web3Provider)
+    }
+}

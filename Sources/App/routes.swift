@@ -5,8 +5,7 @@ func routes(_ app: Application) throws {
         return "123"
     }
 
-    app.get("hello") { req -> EventLoopFuture<String> in
-        return ETHPolingRoutine.performMonitoring(request: req)
-            .map { _ in "Test" }
+    app.get("hello") { req -> String in
+        return "Hi"
     }
 }

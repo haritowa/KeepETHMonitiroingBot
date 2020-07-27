@@ -50,3 +50,13 @@ extension Request {
         web3Provider(rpcURL: "https://ropsten.infura.io/v3/63d33713d82b4b17bd9ca5fdc08a4509")
     }
 }
+
+extension Application {
+    func web3Provider(rpcURL: URI) -> Web3VaporProvider {
+        Web3VaporProvider(rpcURL: rpcURL, client: self.client)
+    }
+    
+    var web3Provider: Web3VaporProvider {
+        web3Provider(rpcURL: "https://ropsten.infura.io/v3/63d33713d82b4b17bd9ca5fdc08a4509")
+    }
+}

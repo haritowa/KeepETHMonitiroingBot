@@ -31,3 +31,9 @@ extension Request {
     
     var telegramClient: TelegramClientProtocol { TelegramClient(apiKey: telegramBotAPIKey, client: client) }
 }
+
+extension Application {
+    var telegramBotAPIKey: String { return "1372997939:AAHdcWh4ouHBAgNETLuIpenRMqDEoepozeM" }
+    
+    var telegramClient: TelegramClientProtocol { TelegramClient(apiKey: telegramBotAPIKey, client: client) }
+}
