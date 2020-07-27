@@ -13,7 +13,7 @@ struct CreateAlertMonitor: Migration {
         database.schema(AlertMonitor.schema)
             .id()
             .field("operator_address", .string, .required)
-            .field("telegramDialogueID", .int, .required)
+            .field("telegram_dialogue_id", .int, .required)
             .field("eth_threshold", .int, .required)
             .unique(on: "operator_address")
             .create()
