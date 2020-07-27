@@ -29,8 +29,11 @@ struct AddMonitorRoutine {
     
     private static func validateETHAddress(eventLoop: EventLoop, address: String) -> EventLoopFuture<EthereumAddress> {
         eventLoop.tryFuture {
-            guard let ethAddress = EthereumAddress(hexString: address) else { throw Error.invalidAddress(address) }
-            return ethAddress
+            do {
+                return try EthereumAddress(hex: address, eip55: true)
+            } catch {
+                throw Error.invalidAddress(address)
+            }
         }
     }
     

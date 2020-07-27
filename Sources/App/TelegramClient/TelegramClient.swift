@@ -27,7 +27,13 @@ class TelegramClient: TelegramClientProtocol {
 }
 
 extension Request {
-    var telegramBotAPIKey: String { return "" }
+    var telegramBotAPIKey: String { return "1372997939:AAHdcWh4ouHBAgNETLuIpenRMqDEoepozeM" }
+    
+    var telegramClient: TelegramClientProtocol { TelegramClient(apiKey: telegramBotAPIKey, client: client) }
+}
+
+extension Application {
+    var telegramBotAPIKey: String { return "1372997939:AAHdcWh4ouHBAgNETLuIpenRMqDEoepozeM" }
     
     var telegramClient: TelegramClientProtocol { TelegramClient(apiKey: telegramBotAPIKey, client: client) }
 }
