@@ -14,8 +14,7 @@ struct CreateAlertMonitor: Migration {
             .id()
             .field("operator_address", .string, .required)
             .field("telegram_dialogue_id", .int, .required)
-            .field("eth_threshold", .int, .required)
-            .unique(on: "operator_address")
+            .field("eth_threshold", .uint, .required)
             .create()
     }
     

@@ -18,6 +18,12 @@ struct SolidityInvocationParamExtractionError: Error {
     let value: Any?
 }
 
+public extension BigUInt {
+    var ethSecondDigitPericion: Double {
+        return Double(self / BigUInt(10).power(16)) / 100
+    }
+}
+
 extension SolidityInvocation {
     func call(eventLoop: EventLoop) -> EventLoopFuture<[String: Any]> {
         let promise = eventLoop.makePromise(of: [String: Any].self)
