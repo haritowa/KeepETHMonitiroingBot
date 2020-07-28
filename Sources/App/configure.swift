@@ -14,7 +14,12 @@ public func configure(_ app: Application) throws {
 }
 
 private func setupDatabase(app: Application) throws {
-    app.databases.use(.postgres(hostname: "localhost", username: "haritowa", password: "", database: "haritowa"), as: .psql)
+    app.databases.use(.postgres(
+        hostname: Environment.get("DATABASE_HOST") ?? "localhost",
+        username: Environment.get("DATABASE_USERNAME") ?? "haritowa",
+        password: Environment.get("DATABASE_PASSWORD") ?? "",
+        database: Environment.get("DATABASE_NAME") ?? "haritowa"
+    ), as: .psql)
     
     app.migrations.add(CreateAlertMonitor())
 }
@@ -23,7 +28,7 @@ private func setupQueues(app: Application) throws {
     try app.queues.use(.redis(url: "redis://127.0.0.1:6379"))
     
     app.queues.schedule(ETHPolingJob())
-        .hourly()
+        .minutely()
         .at(0)
     
     try app.queues.startScheduledJobs()

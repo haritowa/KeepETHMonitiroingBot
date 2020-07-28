@@ -9,6 +9,7 @@ RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
     && apt-get -q dist-upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Set up a build area
 WORKDIR /build
 
 # First just resolve dependencies.
@@ -21,7 +22,7 @@ RUN swift package resolve
 # Copy entire repo into container
 COPY . .
 
-# Compile with optimizations
+# Build everything, with optimizations and test discovery
 RUN swift build --enable-test-discovery -c release
 
 # Switch to the staging area
@@ -31,7 +32,8 @@ WORKDIR /staging
 RUN cp "$(swift build --package-path /build -c release --show-bin-path)/Run" ./
 
 # Uncomment the next line if you need to load resources from the `Public` directory.
-#RUN mv /build/Public /staging/Public
+# Ensure that by default, neither the directory nor any of its contents are writable.
+#RUN mv /build/Public ./Public && chmod -R a-w ./Public
 
 # ================================
 # Run image
