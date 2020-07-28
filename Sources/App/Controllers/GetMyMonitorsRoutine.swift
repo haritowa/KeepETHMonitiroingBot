@@ -26,7 +26,7 @@ struct GetMyAlertsRoutine {
         guard !alerts.isEmpty else { return emptyMonitorsSummary() }
         
         let monitorDescriptions = alerts.map { monitor in
-            "\(monitor.operatorAddress) : \(monitor.ethThreshold) ETH"
+            "\(createEtherscanLink(for: monitor.operatorAddress)) : *\(monitor.ethThreshold)* ETH"
         }.joined(separator: "\n")
         
         return """

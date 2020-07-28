@@ -10,20 +10,12 @@ import Vapor
 
 import Fluent
 
-private extension EventLoopFuture {
-    func asTelegramSuccess() -> EventLoopFuture<String> {
-        map { _ in "True" }
-    }
-}
-
 class AlertsMonitorController {
-    static func sendCurrentMonitors(request: Request, for telegramID: Int) -> EventLoopFuture<String> {
+    static func sendCurrentMonitors(request: Request, for telegramID: Int) -> EventLoopFuture<Void> {
         GetMyAlertsRoutine.sendCurrentMonitors(for: telegramID, request: request)
-            .asTelegramSuccess()
     }
     
-    static func addMonitor(request: Request, for telegramID: Int, address: String, ethThreshold: UInt) -> EventLoopFuture<String> {
+    static func addMonitor(request: Request, for telegramID: Int, address: String, ethThreshold: UInt) -> EventLoopFuture<Void> {
         AddMonitorRoutine.addMonitor(request: request, for: telegramID, address: address, ethThreshold: ethThreshold)
-            .asTelegramSuccess()
     }
 }

@@ -44,18 +44,35 @@ struct AddMonitorRoutine {
         }
     }
     
+    private static func getMonitorForUser(request: Request, for telegramID: Int, address: String, ethThreshold: UInt) -> EventLoopFuture<AlertMonitor?> {
+        AlertMonitor.query(on: request.db)
+            .filter(\.$operatorAddress == address)
+            .filter(\.$telegramDialogueID == telegramID)
+            .first()
+    }
+    
+    private static func createOrUpdateMonitorWith(request: Request, for telegramID: Int, address: String, ethThreshold: UInt) -> EventLoopFuture<AlertMonitor> {
+        getMonitorForUser(request: request, for: telegramID, address: address, ethThreshold: ethThreshold).flatMap { monitor in
+            if let monitor = monitor {
+                monitor.ethThreshold = ethThreshold
+                return monitor.save(on: request.db).map { monitor }
+            } else {
+                let newMonitor = AlertMonitor(telegramDialogueID: telegramID, operatorAddress: address, ethThreshold: ethThreshold)
+                return newMonitor.create(on: request.db).map { newMonitor }
+            }
+        }
+    }
+    
     private static func addMonitorModelWith(request: Request, for telegramID: Int, address: String, ethThreshold: UInt) -> (Double) -> EventLoopFuture<(AlertMonitor, Double)> {
         return { ethValue in
-            let model = AlertMonitor(telegramDialogueID: telegramID, operatorAddress: address, ethThreshold: ethThreshold)
-            
-            return model.create(on: request.db)
+            createOrUpdateMonitorWith(request: request, for: telegramID, address: address, ethThreshold: ethThreshold)
+                .map { ($0, ethValue) }
                 .flatMapErrorThrowing { _ in throw Error.cantCreateModel }
-                .map { _ in (model, ethValue) }
         }
     }
     
     private static func successMessage(for alertMonitor: AlertMonitor, ethValue: Double) -> String {
-        return "Successfully created monitor for \(alertMonitor.operatorAddress). Your current unbondend ETH value is \(ethValue)"
+        return "I'll notify you when \(createEtherscanLink(for: alertMonitor.operatorAddress)) unbounded ETH will be lower than \(alertMonitor.ethThreshold).\nCurrently you have *\(ethValue)* unbounded ETH."
     }
     
     private static func sendAddMonitorSuccessMessage(with request: Request) -> ((AlertMonitor, Double)) -> EventLoopFuture<Void> {
