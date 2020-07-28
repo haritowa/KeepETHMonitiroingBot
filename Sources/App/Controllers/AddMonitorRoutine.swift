@@ -44,13 +44,30 @@ struct AddMonitorRoutine {
         }
     }
     
+    private static func getMonitorForUser(request: Request, for telegramID: Int, address: String, ethThreshold: UInt) -> EventLoopFuture<AlertMonitor?> {
+        AlertMonitor.query(on: request.db)
+            .filter(\.$operatorAddress == address)
+            .filter(\.$telegramDialogueID == telegramID)
+            .first()
+    }
+    
+    private static func createOrUpdateMonitorWith(request: Request, for telegramID: Int, address: String, ethThreshold: UInt) -> EventLoopFuture<AlertMonitor> {
+        getMonitorForUser(request: request, for: telegramID, address: address, ethThreshold: ethThreshold).flatMap { monitor in
+            if let monitor = monitor {
+                monitor.ethThreshold = ethThreshold
+                return monitor.save(on: request.db).map { monitor }
+            } else {
+                let newMonitor = AlertMonitor(telegramDialogueID: telegramID, operatorAddress: address, ethThreshold: ethThreshold)
+                return newMonitor.create(on: request.db).map { newMonitor }
+            }
+        }
+    }
+    
     private static func addMonitorModelWith(request: Request, for telegramID: Int, address: String, ethThreshold: UInt) -> (Double) -> EventLoopFuture<(AlertMonitor, Double)> {
         return { ethValue in
-            let model = AlertMonitor(telegramDialogueID: telegramID, operatorAddress: address, ethThreshold: ethThreshold)
-            
-            return model.create(on: request.db)
+            createOrUpdateMonitorWith(request: request, for: telegramID, address: address, ethThreshold: ethThreshold)
+                .map { ($0, ethValue) }
                 .flatMapErrorThrowing { _ in throw Error.cantCreateModel }
-                .map { _ in (model, ethValue) }
         }
     }
     

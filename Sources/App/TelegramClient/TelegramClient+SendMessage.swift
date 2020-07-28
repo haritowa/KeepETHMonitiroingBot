@@ -8,7 +8,7 @@
 import Foundation
 import Vapor
 
-private struct TelegramSendMessageRequestModel: Content {
+struct TelegramSendMessageRequestModel: Content {
     enum CodingKeys: String, CodingKey {
         case chatID = "chat_id"
         case text
@@ -21,6 +21,13 @@ private struct TelegramSendMessageRequestModel: Content {
     let replyMessageID: Int?
     
     let replyMarkup: TelegramClientReplyMarkup?
+    
+    init(chatID: Int, text: String, replyMessageID: Int? = nil, replyMarkup: TelegramClientReplyMarkup? = nil) {
+        self.chatID = chatID
+        self.text = text
+        self.replyMessageID = replyMessageID
+        self.replyMarkup = replyMarkup
+    }
 }
 
 extension TelegramSendMessageRequestModel {
@@ -47,18 +54,16 @@ extension TelegramSendMessageRequestModel {
 }
 
 extension TelegramClientProtocol {
-    func sendMessage(chatID: Int, replyMessageID: Int?, text: String, replyMarkup: TelegramClientReplyMarkup?) -> EventLoopFuture<Void> {
+    func sendMessage(messageModel: TelegramSendMessageRequestModel) -> EventLoopFuture<Void> {
         let uri = getURI(for: "sendMessage")
-        
-        let content = TelegramSendMessageRequestModel(
-            chatID: chatID,
-            text: text,
-            replyMessageID: replyMessageID,
-            replyMarkup: replyMarkup
-        )
+        let content = messageModel
         
         return client.post(uri, beforeSend: { try $0.content.encode(content) })
             .flatMapThrowing(TelegramResponseParser<Void>.parseResponse)
+    }
+    
+    func sendMessage(chatID: Int, replyMessageID: Int?, text: String, replyMarkup: TelegramClientReplyMarkup?) -> EventLoopFuture<Void> {
+        sendMessage(messageModel: TelegramSendMessageRequestModel(chatID: chatID, text: text, replyMessageID: replyMessageID, replyMarkup: replyMarkup))
     }
     
     func sendMessage(chatID: Int, text: String, replyMessageID: Int? = nil, replyMarkup: TelegramClientReplyMarkup? = nil) -> EventLoopFuture<Void> {

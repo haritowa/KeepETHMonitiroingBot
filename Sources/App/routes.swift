@@ -8,4 +8,6 @@ func routes(_ app: Application) throws {
     app.get("hello") { req -> String in
         return "Hi"
     }
+    
+    app.post("telegram", "webhook", use: TelegramWebhookController.handle)
 }
