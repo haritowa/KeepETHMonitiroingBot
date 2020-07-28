@@ -28,7 +28,7 @@ x-shared_environment: &shared_environment
 
 services:
   app:
-    image: haritowa-keep-bot:latest
+    image: haritowa/haritowa-keep-bot:latest
     build:
       context: .
     environment:
@@ -43,7 +43,7 @@ services:
     # user: '0' # uncomment to run as root for testing purposes even though Dockerfile defines 'vapor' user.
     command: ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8080"]
   migrate:
-    image: haritowa-keep-bot:latest
+    image: haritowa/haritowa-keep-bot:latest
     build:
       context: .
     environment:
@@ -52,7 +52,7 @@ services:
       - db
     command: ["migrate", "--yes"]
   revert:
-    image: haritowa-keep-bot:latest
+    image: haritowa/haritowa-keep-bot:latest
     build:
       context: .
     environment:
