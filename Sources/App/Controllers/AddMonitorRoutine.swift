@@ -72,7 +72,7 @@ struct AddMonitorRoutine {
     }
     
     private static func successMessage(for alertMonitor: AlertMonitor, ethValue: Double) -> String {
-        return "Successfully created monitor for \(alertMonitor.operatorAddress). Your current unbondend ETH value is \(ethValue)"
+        return "I'll notify you when \(createEtherscanLink(for: alertMonitor.operatorAddress)) unbounded ETH will be lower than \(alertMonitor.ethThreshold).\nCurrently you have *\(ethValue)* unbounded ETH."
     }
     
     private static func sendAddMonitorSuccessMessage(with request: Request) -> ((AlertMonitor, Double)) -> EventLoopFuture<Void> {

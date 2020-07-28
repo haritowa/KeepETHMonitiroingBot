@@ -8,24 +8,42 @@
 import Foundation
 import Vapor
 
+enum TelegramMessageParseMode: String, Content {
+    case MarkdownV2
+    case Markdown
+}
+
 struct TelegramSendMessageRequestModel: Content {
     enum CodingKeys: String, CodingKey {
         case chatID = "chat_id"
         case text
         case replyMessageID = "reply_to_message_id"
         case replyMarkup = "reply_markup"
+        case parseMode = "parse_mode"
+        case disableWebPagePreview = "disable_web_page_preview"
     }
     
     let chatID: Int
     let text: String
     let replyMessageID: Int?
+    let parseMode: TelegramMessageParseMode?
+    let disableWebPagePreview: Bool?
     
     let replyMarkup: TelegramClientReplyMarkup?
     
-    init(chatID: Int, text: String, replyMessageID: Int? = nil, replyMarkup: TelegramClientReplyMarkup? = nil) {
+    init(
+        chatID: Int,
+        text: String,
+        replyMessageID: Int? = nil,
+        parseMode: TelegramMessageParseMode? = .Markdown,
+        disableWebPagePreview: Bool? = true,
+        replyMarkup: TelegramClientReplyMarkup? = nil
+    ) {
         self.chatID = chatID
         self.text = text
         self.replyMessageID = replyMessageID
+        self.parseMode = parseMode
+        self.disableWebPagePreview = disableWebPagePreview
         self.replyMarkup = replyMarkup
     }
 }
@@ -43,6 +61,14 @@ extension TelegramSendMessageRequestModel {
         
         if let replyMessageID = replyMessageID {
             try container.encode(replyMessageID, forKey: .replyMessageID)
+        }
+        
+        if let parseMode = parseMode {
+            try container.encode(parseMode, forKey: .parseMode)
+        }
+        
+        if let disableWebPagePreview = disableWebPagePreview {
+            try container.encode(disableWebPagePreview, forKey: .disableWebPagePreview)
         }
         
         switch replyMarkup {
