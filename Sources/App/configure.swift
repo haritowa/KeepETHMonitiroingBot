@@ -34,6 +34,9 @@ private func setupQueues(app: Application) throws {
     app.queues.schedule(ETHPolingJob())
         .at(Date(timeIntervalSinceNow: 10))
     
+    app.queues.schedule(SetTelegramCommandsJob())
+        .at(Date(timeIntervalSinceNow: 5))
+    
     try app.queues.startScheduledJobs()
 }
 
