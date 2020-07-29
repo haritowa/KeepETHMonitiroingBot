@@ -22,6 +22,7 @@ private func setupDatabase(app: Application) throws {
     ), as: .psql)
     
     app.migrations.add(CreateAlertMonitor())
+    app.migrations.add(AddLatestReportedValue())
 }
 
 private func setupQueues(app: Application) throws {

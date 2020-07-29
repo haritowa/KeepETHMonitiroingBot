@@ -60,34 +60,61 @@ struct ETHPolingJob: ScheduledJob {
         return result
     }
     
+    private static func resetLatestReportedValuesForNonMatchinMonitors(
+        db: Database,
+        address: String,
+        ethValue: UInt
+    ) -> EventLoopFuture<Void> {
+        db.transaction { transaction in
+            let allNonTriggeredMonitors = AlertMonitor.query(on: transaction)
+                .filter(\.$operatorAddress == address)
+                .filter(\.$ethThreshold < ethValue)
+                .filter(\.$latestReportedValue != nil)
+                .all()
+            
+            return allNonTriggeredMonitors.flatMapEach(on: transaction.eventLoop) { monitor -> EventLoopFuture<Void> in
+                monitor.latestReportedValue = nil
+                return monitor.save(on: transaction)
+            }.map { _ in () }
+        }.flatMapErrorThrowing { _ in () }
+    }
+    
     private static func getMonitors(db: Database, for address: String, ethValue: UInt) -> EventLoopFuture<[AlertMonitor]> {
         AlertMonitor
             .query(on: db)
             .filter(\.$operatorAddress == address)
             .filter(\.$ethThreshold >= ethValue)
+            .group(.or) { $0.filter(\.$latestReportedValue != ethValue).filter(\.$latestReportedValue == nil) }
             .all()
     }
     
     private static func sendNotification(
         telegramClient: TelegramClientProtocol,
         triggeredMonitor: AlertMonitor,
+        db: Database,
         unboundedETH: Double
     ) -> EventLoopFuture<Void> {
         let message = "Operator \(createEtherscanLink(for: triggeredMonitor.operatorAddress)) is low on unbounded ETH(*\(unboundedETH)*)"
         return telegramClient.sendMessage(chatID: triggeredMonitor.telegramDialogueID, text: message)
+            .flatMap { triggeredMonitor.latestReportedValue = normalize(eth: unboundedETH); return triggeredMonitor.save(on: db) }
     }
     
     private static func sendNotifications(
         unboundedETH: Double,
+        db: Database,
         telegramClient: TelegramClientProtocol,
         eventLoop: EventLoop
     ) -> ([AlertMonitor]) -> EventLoopFuture<Void> {
         return { monitors in
-            let futures = monitors.map { sendNotification(telegramClient: telegramClient, triggeredMonitor: $0, unboundedETH: unboundedETH) }
+            let futures = monitors.map { sendNotification(telegramClient: telegramClient, triggeredMonitor: $0, db: db, unboundedETH: unboundedETH) }
             
             return EventLoopFuture.whenAllComplete(futures, on: eventLoop)
                 .map { _ in () }
         }
+    }
+    
+    private static func normalize(eth: Double) -> UInt {
+        UInt(ceil(eth))
     }
     
     private static func sendNotifications(
@@ -97,10 +124,11 @@ struct ETHPolingJob: ScheduledJob {
         telegramClient: TelegramClientProtocol,
         eventLoop: EventLoop
     ) -> EventLoopFuture<Void> {
-        let ethValue = UInt(ceil(unboundedETH))
+        let ethValue = normalize(eth: unboundedETH)
         
-        return getMonitors(db: db, for: address, ethValue: ethValue)
-            .flatMap(sendNotifications(unboundedETH: unboundedETH, telegramClient: telegramClient, eventLoop: eventLoop))
+        return resetLatestReportedValuesForNonMatchinMonitors(db: db, address: address, ethValue: ethValue)
+            .flatMap { getMonitors(db: db, for: address, ethValue: ethValue) }
+            .flatMap(sendNotifications(unboundedETH: unboundedETH, db: db, telegramClient: telegramClient, eventLoop: eventLoop))
     }
     
     private static func sendNotifications(

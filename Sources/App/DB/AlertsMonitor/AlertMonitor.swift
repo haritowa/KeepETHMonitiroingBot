@@ -24,12 +24,16 @@ final class AlertMonitor: Model {
     @Field(key: "eth_threshold")
     var ethThreshold: UInt
     
+    @Field(key: "latest_reported_value")
+    var latestReportedValue: UInt?
+    
     init() { }
 
-    init(id: UUID? = nil, telegramDialogueID: Int, operatorAddress: String, ethThreshold: UInt) {
+    init(id: UUID? = nil, telegramDialogueID: Int, operatorAddress: String, ethThreshold: UInt, latestReportedValue: UInt? = nil) {
         self.id = id
         self.telegramDialogueID = telegramDialogueID
         self.operatorAddress = operatorAddress
         self.ethThreshold = ethThreshold
+        self.latestReportedValue = latestReportedValue
     }
 }

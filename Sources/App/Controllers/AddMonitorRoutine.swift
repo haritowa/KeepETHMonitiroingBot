@@ -55,6 +55,7 @@ struct AddMonitorRoutine {
         getMonitorForUser(request: request, for: telegramID, address: address, ethThreshold: ethThreshold).flatMap { monitor in
             if let monitor = monitor {
                 monitor.ethThreshold = ethThreshold
+                monitor.latestReportedValue = nil
                 return monitor.save(on: request.db).map { monitor }
             } else {
                 let newMonitor = AlertMonitor(telegramDialogueID: telegramID, operatorAddress: address, ethThreshold: ethThreshold)
