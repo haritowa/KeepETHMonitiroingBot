@@ -28,8 +28,11 @@ private func setupQueues(app: Application) throws {
     try app.queues.use(.redis(url: "redis://127.0.0.1:6379"))
     
     app.queues.schedule(ETHPolingJob())
-        .minutely()
+        .hourly()
         .at(0)
+    
+    app.queues.schedule(ETHPolingJob())
+        .at(Date(timeIntervalSinceNow: 10))
     
     try app.queues.startScheduledJobs()
 }
