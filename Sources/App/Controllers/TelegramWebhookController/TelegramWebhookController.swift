@@ -19,6 +19,11 @@ private struct SetupMonitorTelegramWebhookCommand: TelegramWebhookCommand {
     let ethThreshold: UInt
 }
 
+private struct RemoveMonitorTelegramWebhookCommand: TelegramWebhookCommand {
+    let telegramID: Int
+    let address: String
+}
+
 private struct MyMonitorsTelegramWebhookCommand: TelegramWebhookCommand {
     let telegramID: Int
 }
@@ -26,6 +31,7 @@ private struct MyMonitorsTelegramWebhookCommand: TelegramWebhookCommand {
 private enum TelegramWebhookCommandName: String {
     case setupMonitor = "/setup"
     case myMonitors = "/list"
+    case remove = "/remove"
     case start = "/start"
 }
 
@@ -74,7 +80,9 @@ struct TelegramWebhookController {
         
         switch commandName {
         case .setupMonitor:
-            result = "Usage this format:\n\(commandName.rawValue) <*Operator Address*>(hex) <*Alert Threshold*>(integer)"
+            result = "Use this format:\n\(commandName.rawValue) <*Operator Address*>(hex) <*Alert Threshold*>(integer)"
+        case .remove:
+            result = "Use this format:\n\(commandName.rawValue) <*Operator Address*>(hex)"
         case .myMonitors:
             result = "Usage: \(commandName.rawValue)"
         case .start:
@@ -86,6 +94,18 @@ struct TelegramWebhookController {
     
     private static func commandUsageHelpError(for commandName: TelegramWebhookCommandName, chatID: Int) -> TelegramWebhookCommandParsingError {
         TelegramWebhookCommandParsingError(errorMessages: [commandUsageHelp(for: commandName, chatID: chatID)])
+    }
+    
+    private static func sendUsageError(
+        commandName: TelegramWebhookCommandName,
+        with additionalError: String,
+        chatID: Int
+    ) -> Error {
+        let error = TelegramSendMessageRequestModel(chatID: chatID, text: additionalError)
+        return TelegramWebhookCommandParsingError(errorMessages: [
+            commandUsageHelp(for: commandName, chatID: chatID),
+            error
+        ])
     }
     
     private static func parseSetupMonitorCommand(
@@ -103,30 +123,43 @@ struct TelegramWebhookController {
         let ethAddressComponent = components[0]
         
         guard EthereumAddress(hexString: ethAddressComponent) != nil else {
-            let error = TelegramSendMessageRequestModel(chatID: chatID, text: "Etherum adress is invalid")
-            throw TelegramWebhookCommandParsingError(errorMessages: [
-                commandUsageHelp(for: .setupMonitor, chatID: chatID),
-                error
-            ])
+            throw sendUsageError(commandName: .setupMonitor, with: "Etherum adress is invalid", chatID: chatID)
         }
         
         guard let thresholdComponent = UInt.init(components[1]) else {
-            let error = TelegramSendMessageRequestModel(chatID: chatID, text: "Threshold value is invalid")
-            throw TelegramWebhookCommandParsingError(errorMessages: [
-                commandUsageHelp(for: .setupMonitor, chatID: chatID),
-                error
-            ])
+            throw sendUsageError(commandName: .setupMonitor, with: "Threshold value is invalid", chatID: chatID)
         }
         
         guard thresholdComponent > 0 else {
-            let error = TelegramSendMessageRequestModel(chatID: chatID, text: "Threshold value must be greater than zero")
-            throw TelegramWebhookCommandParsingError(errorMessages: [
-                commandUsageHelp(for: .setupMonitor, chatID: chatID),
-                error
-            ])
+            throw sendUsageError(commandName: .setupMonitor, with: "Threshold value must be greater than zero", chatID: chatID)
         }
         
         return SetupMonitorTelegramWebhookCommand(telegramID: chatID, address: ethAddressComponent, ethThreshold: thresholdComponent)
+    }
+    
+    private static func parseRemoveMonitorCommand(
+        entity: TelegramMessageEntityModel,
+        message: String,
+        chatID: Int
+    ) throws -> TelegramWebhookCommand {
+        let messageData = message.dropFirst(entity.offset + entity.length + 1)
+        
+        let components = messageData.components(separatedBy: .whitespaces)
+        guard components.count == 1 else {
+            throw commandUsageHelpError(for: .remove, chatID: chatID)
+        }
+        
+        let ethAddressComponent = components[0]
+        
+        guard ethAddressComponent.hasPrefix("0x") else {
+            throw sendUsageError(commandName: .remove, with: "Etherum adress is invalid", chatID: chatID)
+        }
+        
+        guard ethAddressComponent.count >= 4 else {
+            throw sendUsageError(commandName: .remove, with: "Enter at least 4 chars from your address", chatID: chatID)
+        }
+        
+        return RemoveMonitorTelegramWebhookCommand(telegramID: chatID, address: ethAddressComponent)
     }
     
     private static func parseCommand(
@@ -142,6 +175,8 @@ struct TelegramWebhookController {
             return MyMonitorsTelegramWebhookCommand(telegramID: chatID)
         case .setupMonitor:
             return try parseSetupMonitorCommand(entity: entity, message: message, chatID: chatID)
+        case .remove:
+            return try parseRemoveMonitorCommand(entity: entity, message: message, chatID: chatID)
         }
     }
     
@@ -176,6 +211,12 @@ struct TelegramWebhookController {
                     for: setupCommand.telegramID,
                     address: setupCommand.address,
                     ethThreshold: setupCommand.ethThreshold
+                )
+            } else if let removeCommand = command as? RemoveMonitorTelegramWebhookCommand {
+                return DeleteMonitorRoutine.perform(
+                    with: request,
+                    telegramID: removeCommand.telegramID,
+                    addressQuery: removeCommand.address
                 )
             } else {
                 return request.eventLoop.makeFailedFuture(createError(with: "Unknown error", chatID: command.telegramID))
