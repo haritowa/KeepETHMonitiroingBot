@@ -26,6 +26,7 @@ private struct MyMonitorsTelegramWebhookCommand: TelegramWebhookCommand {
 private enum TelegramWebhookCommandName: String {
     case setupMonitor = "/setup"
     case myMonitors = "/list"
+    case start = "/start"
 }
 
 private struct TelegramWebhookCommandParsingError: Error {
@@ -73,9 +74,11 @@ struct TelegramWebhookController {
         
         switch commandName {
         case .setupMonitor:
-            result = "Usage: \(commandName.rawValue) <eth_operator_address>(hex) <eth_alert_threshold>(integer)"
+            result = "Usage this format:\n\(commandName.rawValue) <*Operator Address*>(hex) <*Alert Threshold*>(integer)"
         case .myMonitors:
             result = "Usage: \(commandName.rawValue)"
+        case .start:
+            result = "You can add your monitors with \(TelegramWebhookCommandName.setupMonitor.rawValue) command"
         }
         
         return TelegramSendMessageRequestModel(chatID: chatID, text: result, replyMessageID: nil, replyMarkup: nil)
@@ -133,6 +136,8 @@ struct TelegramWebhookController {
         chatID: Int
     ) throws -> TelegramWebhookCommand {
         switch name {
+        case .start:
+            throw commandUsageHelpError(for: .start, chatID: chatID)
         case .myMonitors:
             return MyMonitorsTelegramWebhookCommand(telegramID: chatID)
         case .setupMonitor:

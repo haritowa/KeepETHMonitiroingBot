@@ -73,7 +73,7 @@ struct ETHPolingJob: ScheduledJob {
         triggeredMonitor: AlertMonitor,
         unboundedETH: Double
     ) -> EventLoopFuture<Void> {
-        let message = "Low available ETH alert triggered for \(triggeredMonitor.operatorAddress). (\(unboundedETH) is equal or lower than \(triggeredMonitor.ethThreshold) ETH)"
+        let message = "Operator \(createEtherscanLink(for: triggeredMonitor.operatorAddress)) is low on unbounded ETH(*\(unboundedETH)*)"
         return telegramClient.sendMessage(chatID: triggeredMonitor.telegramDialogueID, text: message)
     }
     
