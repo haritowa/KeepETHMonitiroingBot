@@ -25,7 +25,7 @@ struct SetTelegramCommandsJob: ScheduledJob {
             commands: [
                 TelegramBotCommand(command: "setup", description: "Create or update monitor"),
                 TelegramBotCommand(command: "list", description: "Show all active monitors"),
-                TelegramBotCommand(command: "remove", description: "Remove monitor. You can use specify only few chars from operator address")
+                TelegramBotCommand(command: "remove", description: "Remove monitor. You may type few first characters from operator address")
             ]
         )
     }
