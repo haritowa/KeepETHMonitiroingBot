@@ -35,9 +35,6 @@ services:
       <<: *shared_environment
     depends_on:
       - db
-    ports:
-      - '8081:8081'
-    # user: '0' # uncomment to run as root for testing purposes even though Dockerfile defines 'vapor' user.
     command: ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8081"]
   migrate:
     image: haritowa/haritowa-keep-bot:latest
@@ -66,5 +63,14 @@ services:
       POSTGRES_USER: vapor_username
       POSTGRES_PASSWORD: vapor_password
       POSTGRES_DB: vapor_database
+  server: 
+    image: nginx:latest
+    container_name: keep_bot_production_nginx
+    depends_on:
+      - app
+    volumes:
+      - ./Nginx/default:/etc/nginx/conf.d/default.conf
+      - ./certs:/root/certs
     ports:
-      - '5432:5432'
+      - 80:80
+      - 443:443
