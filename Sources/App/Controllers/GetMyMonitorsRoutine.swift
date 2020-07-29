@@ -26,7 +26,7 @@ struct GetMyAlertsRoutine {
         guard !alerts.isEmpty else { return emptyMonitorsSummary() }
         
         let monitorDescriptions = alerts.map { monitor in
-            "\(createEtherscanLink(for: monitor.operatorAddress)) : *\(monitor.ethThreshold)* ETH"
+            "\(createEtherscanLink(for: monitor.operatorAddress)) when unbounded is lower or equal to *\(monitor.ethThreshold)* ETH"
         }.joined(separator: "\n")
         
         return """
