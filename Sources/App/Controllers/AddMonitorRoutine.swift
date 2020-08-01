@@ -123,16 +123,30 @@ struct AddMonitorRoutine {
         let dashboardURL = URL(string: "https://dashboard.test.keep.network/applications/tbtc")!
         let message = "⁉️ Operator \(createEtherscanLink(for: address)) does not have TBTC authorization. You can grant authorization using dashboard."
         
-        // TODO: Add check auth button
-        return request.telegramClient.sendMessage(chatID: telegramID, text: message)
+        let replyMarkup = TelegramClientReplyMarkup.inlineReply(
+            TelegramInlineKeyboardMarkup(inlineKeyboard: [
+                [
+                    .init(text: "Go to dashboard", url: dashboardURL)
+                ]
+            ])
+        )
+        
+        return request.telegramClient.sendMessage(chatID: telegramID, text: message, replyMarkup: replyMarkup)
     }
     
     private static func sendSortitionCantGetPoolMessage(with request: Request, telegramID: Int, address: String) -> EventLoopFuture<Void> {
         let dashboardURL = URL(string: "https://dashboard.test.keep.network/applications/tbtc")!
         let message = "⚠️ Can't get sortion pool for \(createEtherscanLink(for: address)). Check your ECDSAKeepFactory authorization."
         
-        // TODO: Add check auth button
-        return request.telegramClient.sendMessage(chatID: telegramID, text: message)
+        let replyMarkup = TelegramClientReplyMarkup.inlineReply(
+            TelegramInlineKeyboardMarkup(inlineKeyboard: [
+                [
+                    .init(text: "Go to dashboard", url: dashboardURL)
+                ]
+            ])
+        )
+        
+        return request.telegramClient.sendMessage(chatID: telegramID, text: message, replyMarkup: replyMarkup)
     }
     
     private static func sendSortitionResultMessage(with request: Request, telegramID: Int, address: String) -> (KeepTBTCAuthResult) -> EventLoopFuture<Void> {

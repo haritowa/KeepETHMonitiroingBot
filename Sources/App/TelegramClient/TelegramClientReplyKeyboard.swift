@@ -11,6 +11,7 @@ import Vapor
 enum TelegramClientReplyMarkup {
     case replyKeyboard(TelegramClientReplyKeyboard)
     case forceReply(TelegramClientForceReply)
+    case inlineReply(TelegramInlineKeyboardMarkup)
 }
 
 struct TelegramClientKeyboardButton: Encodable, ExpressibleByStringLiteral {
@@ -37,4 +38,17 @@ struct TelegramClientForceReply: Encodable {
     }
     
     let forceReply: Bool
+}
+
+struct TelegramInlineKeyboardButton: Encodable {
+    let text: String
+    let url: URL?
+}
+
+struct TelegramInlineKeyboardMarkup: Encodable {
+    enum CodingKeys: String, CodingKey {
+        case inlineKeyboard = "inline_keyboard"
+    }
+    
+    let inlineKeyboard: [[TelegramInlineKeyboardButton]]
 }
