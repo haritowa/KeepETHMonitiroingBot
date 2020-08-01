@@ -74,6 +74,7 @@ extension TelegramSendMessageRequestModel {
         switch replyMarkup {
         case .replyKeyboard(let keyboard): try container.encode(keyboard, forKey: .replyMarkup)
         case .forceReply(let reply): try container.encode(reply, forKey: .replyMarkup)
+        case .inlineReply(let reply): try container.encode(reply, forKey: .replyMarkup)
         case .none: break
         }
     }
