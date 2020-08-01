@@ -9,10 +9,18 @@ import Foundation
 import Vapor
 import Web3
 
+enum KeepTBTCAuthResult {
+    case granted
+    case cantGetSoritonPool
+    case notAuthorized
+    case uknownError
+}
+
 protocol KeepClientProtocol {
     var eventLoop: EventLoop { get }
     
     func unbondedValue(operatorAddress: EthereumAddress) -> EventLoopFuture<BigUInt>
+    func hasTBTCAuthorization(operatorAddress: EthereumAddress) -> EventLoopFuture<KeepTBTCAuthResult>
 }
 
 class KeepClient: KeepClientProtocol {
@@ -30,6 +38,33 @@ class KeepClient: KeepClientProtocol {
         web3.eth.Contract(type: KeepBoundingContract.self, address: KeepBoundingContract.testNetAddress)
             .unbondedValue(operatorAddress: operatorAddress)
             .callAndExtract(eventLoop: eventLoop)
+    }
+    
+    func hasTBTCAuthorization(operatorAddress: EthereumAddress) -> EventLoopFuture<KeepTBTCAuthResult> {
+        getTBTCSoritonPool(for: operatorAddress).flatMapAlways { fetchSortitionPoolResult in
+            switch fetchSortitionPoolResult {
+            case .failure: return self.eventLoop.future(KeepTBTCAuthResult.cantGetSoritonPool)
+            case .success(let sortitionPool): return self.hasTBTCAuthorization(for: operatorAddress, sortitionPool: sortitionPool)
+            }
+        }
+    }
+    
+    private func getTBTCSoritonPool(for operatorAddress: EthereumAddress) -> EventLoopFuture<EthereumAddress> {
+        web3.eth.Contract(type: BondedECDSAKeepFactoryContract.self, address: BondedECDSAKeepFactoryContract.testNetAddress)
+            .getSortitionPool(applicationAddress: TBTCSystemContract.testNetAddress)
+            .callAndExtract(eventLoop: eventLoop)
+    }
+    
+    private func hasContractAuthorization(for operatorAddress: EthereumAddress, sortitionPool: EthereumAddress) -> EventLoopFuture<Bool> {
+        web3.eth.Contract(type: KeepBoundingContract.self, address: KeepBoundingContract.testNetAddress)
+            .hasSecondaryAuthorization(operatorAddress: operatorAddress, sortitionPool: sortitionPool)
+            .callAndExtract(eventLoop: eventLoop)
+    }
+    
+    private func hasTBTCAuthorization(for operatorAddress: EthereumAddress, sortitionPool: EthereumAddress) -> EventLoopFuture<KeepTBTCAuthResult> {
+        hasContractAuthorization(for: operatorAddress, sortitionPool: sortitionPool)
+            .map { $0 ? KeepTBTCAuthResult.granted : KeepTBTCAuthResult.notAuthorized }
+            .flatMapErrorThrowing { _ in KeepTBTCAuthResult.uknownError }
     }
 }
 
