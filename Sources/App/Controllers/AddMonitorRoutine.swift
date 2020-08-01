@@ -24,6 +24,7 @@ struct AddMonitorRoutine {
             .flatMap(fetchCurrentBalance(request: request))
             .flatMap(addMonitorModelWith(request: request, for: telegramID, address: address, ethThreshold: ethThreshold))
             .flatMap(sendAddMonitorSuccessMessage(with: request))
+            .flatMap { checkSortitionPoolAuth(request: request, telegramID: telegramID, address: address) }
             .flatMapError(sendAddMonitorErrorMessage(with: request, chatID: telegramID))
     }
     
@@ -100,6 +101,48 @@ struct AddMonitorRoutine {
         return { error in
             let message = errorMessage(for: error)
             return request.telegramClient.sendMessage(chatID: chatID, text: message)
+        }
+    }
+    
+    // MARK: - TBTC Auth Check
+    private static func checkSortitionPoolAuth(request: Request, telegramID: Int, address: String) -> EventLoopFuture<Void> {
+        guard let ethAddress = EthereumAddress(hexString: address) else {
+            return request.eventLoop.future()
+        }
+        
+        return request.keepClient.hasTBTCAuthorization(operatorAddress: ethAddress)
+            .flatMap(sendSortitionResultMessage(with: request, telegramID: telegramID, address: address))
+    }
+    
+    private static func sendSortitionGrantedMessage(with request: Request, telegramID: Int, address: String) -> EventLoopFuture<Void> {
+        let message = "✅ Operator \(createEtherscanLink(for: address)) has TBTC authorization and ready to work!"
+        return request.telegramClient.sendMessage(chatID: telegramID, text: message)
+    }
+    
+    private static func sendSortitionNotAuthorizedMessage(with request: Request, telegramID: Int, address: String) -> EventLoopFuture<Void> {
+        let dashboardURL = URL(string: "https://dashboard.test.keep.network/applications/tbtc")!
+        let message = "⁉️ Operator \(createEtherscanLink(for: address)) does not have TBTC authorization. You can grant authorization using dashboard."
+        
+        // TODO: Add check auth button
+        return request.telegramClient.sendMessage(chatID: telegramID, text: message)
+    }
+    
+    private static func sendSortitionCantGetPoolMessage(with request: Request, telegramID: Int, address: String) -> EventLoopFuture<Void> {
+        let dashboardURL = URL(string: "https://dashboard.test.keep.network/applications/tbtc")!
+        let message = "⚠️ Can't get sortion pool for \(createEtherscanLink(for: address)). Check your ECDSAKeepFactory authorization."
+        
+        // TODO: Add check auth button
+        return request.telegramClient.sendMessage(chatID: telegramID, text: message)
+    }
+    
+    private static func sendSortitionResultMessage(with request: Request, telegramID: Int, address: String) -> (KeepTBTCAuthResult) -> EventLoopFuture<Void> {
+        return { result -> EventLoopFuture<Void> in
+            switch result {
+            case .uknownError: return request.eventLoop.future()
+            case .granted: return sendSortitionGrantedMessage(with: request, telegramID: telegramID, address: address)
+            case .notAuthorized: return sendSortitionNotAuthorizedMessage(with: request, telegramID: telegramID, address: address)
+            case .cantGetSoritonPool: return sendSortitionCantGetPoolMessage(with: request, telegramID: telegramID, address: address)
+            }
         }
     }
 }
