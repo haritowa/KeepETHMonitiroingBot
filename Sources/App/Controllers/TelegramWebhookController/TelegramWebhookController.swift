@@ -122,7 +122,7 @@ struct TelegramWebhookController {
         
         let ethAddressComponent = components[0]
         
-        guard EthereumAddress(hexString: ethAddressComponent) != nil else {
+        guard (try? EthereumAddress(hex: ethAddressComponent, eip55: false)) != nil else {
             throw sendUsageError(commandName: .setupMonitor, with: "Etherum adress is invalid", chatID: chatID)
         }
         
