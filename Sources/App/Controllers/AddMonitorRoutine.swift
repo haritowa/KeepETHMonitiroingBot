@@ -106,7 +106,7 @@ struct AddMonitorRoutine {
     
     // MARK: - TBTC Auth Check
     private static func checkSortitionPoolAuth(request: Request, telegramID: Int, address: String) -> EventLoopFuture<Void> {
-        guard let ethAddress = EthereumAddress(hexString: address) else {
+        guard let ethAddress = try? EthereumAddress(hex: address, eip55: false) else {
             return request.eventLoop.future()
         }
         

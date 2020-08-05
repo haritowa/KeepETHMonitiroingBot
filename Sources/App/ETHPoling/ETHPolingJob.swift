@@ -47,7 +47,7 @@ struct ETHPolingJob: ScheduledJob {
     }
     
     private static func toEtherumAddress(operators: [String]) -> [EthereumAddress] {
-        operators.compactMap(EthereumAddress.init(hexString:))
+        operators.compactMap { try? EthereumAddress(hex: $0, eip55: false) }
     }
     
     private static func ethFetchResultWithEthMagnitude(batchResult: KeepUnboundedTokensFetchBatchResult) -> ETHUnboundedTokensBatchResult {
