@@ -35,7 +35,7 @@ class KeepClient: KeepClientProtocol {
     }
     
     func unbondedValue(operatorAddress: EthereumAddress) -> EventLoopFuture<BigUInt> {
-        web3.eth.Contract(type: KeepBoundingContract.self, address: KeepBoundingContract.testNetAddress)
+        web3.eth.Contract(type: KeepBondingContract.self, address: KeepBondingContract.testNetAddress)
             .unbondedValue(operatorAddress: operatorAddress)
             .callAndExtract(eventLoop: eventLoop)
     }
@@ -56,7 +56,7 @@ class KeepClient: KeepClientProtocol {
     }
     
     private func hasContractAuthorization(for operatorAddress: EthereumAddress, sortitionPool: EthereumAddress) -> EventLoopFuture<Bool> {
-        web3.eth.Contract(type: KeepBoundingContract.self, address: KeepBoundingContract.testNetAddress)
+        web3.eth.Contract(type: KeepBondingContract.self, address: KeepBondingContract.testNetAddress)
             .hasSecondaryAuthorization(operatorAddress: operatorAddress, sortitionPool: sortitionPool)
             .callAndExtract(eventLoop: eventLoop)
     }

@@ -11,7 +11,7 @@ import Web3
 import Web3ContractABI
 
 class BondedECDSAKeepFactoryContract: GenericERC20Contract {
-    static let testNetAddress = EthereumAddress(hexString: "0xe7BF8421fBE80c3Bf67082370D86C8D81D1D77F4")!
+    static let testNetAddress = EthereumAddress(hexString: "0xb37c8696cD023c11357B37b5b12A9884c9C83784")!
     
     func getSortitionPool(applicationAddress: EthereumAddress) -> SolidityInvocation {
         let inputs = [SolidityFunctionParameter(name: "_application", type: .address)]
