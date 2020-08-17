@@ -13,7 +13,7 @@ import Queues
 import Fluent
 import Web3
 
-private typealias ETHUnboundedTokensBatchResult = [String: Double]
+private typealias ETHUnbondedTokensBatchResult = [String: Double]
 
 struct ETHPolingJob: ScheduledJob {
     func run(context: QueueContext) -> EventLoopFuture<Void> {
@@ -50,7 +50,7 @@ struct ETHPolingJob: ScheduledJob {
         operators.compactMap { try? EthereumAddress(hex: $0, eip55: false) }
     }
     
-    private static func ethFetchResultWithEthMagnitude(batchResult: KeepUnboundedTokensFetchBatchResult) -> ETHUnboundedTokensBatchResult {
+    private static func ethFetchResultWithEthMagnitude(batchResult: KeepUnbondedTokensFetchBatchResult) -> ETHUnbondedTokensBatchResult {
         var result = [String: Double]()
         
         for (key, value) in batchResult {
@@ -92,21 +92,21 @@ struct ETHPolingJob: ScheduledJob {
         telegramClient: TelegramClientProtocol,
         triggeredMonitor: AlertMonitor,
         db: Database,
-        unboundedETH: Double
+        unbondedETH: Double
     ) -> EventLoopFuture<Void> {
-        let message = "Operator \(createEtherscanLink(for: triggeredMonitor.operatorAddress)) is low on unbounded ETH(*\(unboundedETH)*)"
+        let message = "Operator \(createEtherscanLink(for: triggeredMonitor.operatorAddress)) is low on unbonded ETH(*\(unbondedETH)*)"
         return telegramClient.sendMessage(chatID: triggeredMonitor.telegramDialogueID, text: message)
-            .flatMap { triggeredMonitor.latestReportedValue = normalize(eth: unboundedETH); return triggeredMonitor.save(on: db) }
+            .flatMap { triggeredMonitor.latestReportedValue = normalize(eth: unbondedETH); return triggeredMonitor.save(on: db) }
     }
     
     private static func sendNotifications(
-        unboundedETH: Double,
+        unbondedETH: Double,
         db: Database,
         telegramClient: TelegramClientProtocol,
         eventLoop: EventLoop
     ) -> ([AlertMonitor]) -> EventLoopFuture<Void> {
         return { monitors in
-            let futures = monitors.map { sendNotification(telegramClient: telegramClient, triggeredMonitor: $0, db: db, unboundedETH: unboundedETH) }
+            let futures = monitors.map { sendNotification(telegramClient: telegramClient, triggeredMonitor: $0, db: db, unbondedETH: unbondedETH) }
             
             return EventLoopFuture.whenAllComplete(futures, on: eventLoop)
                 .map { _ in () }
@@ -119,28 +119,28 @@ struct ETHPolingJob: ScheduledJob {
     
     private static func sendNotifications(
         address: String,
-        unboundedETH: Double,
+        unbondedETH: Double,
         db: Database,
         telegramClient: TelegramClientProtocol,
         eventLoop: EventLoop
     ) -> EventLoopFuture<Void> {
-        let ethValue = normalize(eth: unboundedETH)
+        let ethValue = normalize(eth: unbondedETH)
         
         return resetLatestReportedValuesForNonMatchinMonitors(db: db, address: address, ethValue: ethValue)
             .flatMap { getMonitors(db: db, for: address, ethValue: ethValue) }
-            .flatMap(sendNotifications(unboundedETH: unboundedETH, db: db, telegramClient: telegramClient, eventLoop: eventLoop))
+            .flatMap(sendNotifications(unbondedETH: unbondedETH, db: db, telegramClient: telegramClient, eventLoop: eventLoop))
     }
     
     private static func sendNotifications(
         db: Database,
         telegramClient: TelegramClientProtocol,
         eventLoop: EventLoop
-    ) -> (ETHUnboundedTokensBatchResult) -> EventLoopFuture<Void> {
+    ) -> (ETHUnbondedTokensBatchResult) -> EventLoopFuture<Void> {
         return { fetchResult in
             let operations = fetchResult.map { pair in
                 sendNotifications(
                     address: pair.key,
-                    unboundedETH: pair.value,
+                    unbondedETH: pair.value,
                     db: db,
                     telegramClient: telegramClient,
                     eventLoop: eventLoop

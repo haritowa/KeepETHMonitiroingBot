@@ -1,5 +1,5 @@
 //
-//  KeepBoundingContract.swift
+//  KeepBondingContract.swift
 //  
 //
 //  Created by Anton Kharchenko on 7/26/20.
@@ -10,8 +10,8 @@ import Foundation
 import Web3
 import Web3ContractABI
 
-class KeepBoundingContract: GenericERC20Contract {
-    static let testNetAddress = EthereumAddress(hexString: "0x35a29348640e8E65568d7DccFaf8F7A8146580E6")!
+class KeepBondingContract: GenericERC20Contract {
+    static let testNetAddress = EthereumAddress(hexString: "0x90D813F6DF3FFDc73Eb571FE322F5321a6C97E24")!
     
     func unbondedValue(operatorAddress: EthereumAddress) -> SolidityInvocation {
         let inputs = [SolidityFunctionParameter(name: "address", type: .address)]
