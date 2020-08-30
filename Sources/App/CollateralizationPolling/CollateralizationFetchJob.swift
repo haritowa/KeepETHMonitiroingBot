@@ -35,12 +35,14 @@ struct CollateralizationAlertsOperation {
     }
     
     func run() -> EventLoopFuture<Void> {
-        let fetchResult = CollateralizationFetchRoutine(
-            fromBlock: .earliest,
-            eventLoop: eventLoop,
-            web3: web3,
-            keepClient: keepClient
-        ).perform()
+        let fetchResult = getLastKnownBlock().flatMap {
+            CollateralizationFetchRoutine(
+                fromBlock: $0,
+                eventLoop: self.eventLoop,
+                web3: self.web3,
+                keepClient: self.keepClient
+            ).perform()
+        }
         
         return fetchResult.flatMap(run)
     }
@@ -48,6 +50,30 @@ struct CollateralizationAlertsOperation {
     private func run(fetchResult: CollateralizationPollingFetchResult) -> EventLoopFuture<Void> {
         getAllMatchingAllerts(for: Set(fetchResult.alerts.keys))
             .flatMap { self.sendAlert(fetchResult: fetchResult, monitors: $0) }
+            .flatMap { self.storeLastKnownBlock(block: fetchResult.latestBlock) }
+    }
+    
+    private func getLastKnownBlock() -> EventLoopFuture<EthereumQuantityTag> {
+        CollateralizationLastKnownBlock
+        .query(on: db)
+        .sort(\.$date, .descending)
+        .first()
+        .map { lastKnownBlock in
+            guard let lastKnownBlock = lastKnownBlock, let blockIndex = BigUInt(hexString: lastKnownBlock.blockNumber) else {
+                return EthereumQuantityTag.earliest
+            }
+            
+            return EthereumQuantityTag.block(blockIndex)
+        }
+    }
+    
+    private func storeLastKnownBlock(block: String?) -> EventLoopFuture<Void> {
+        guard let block = block else { return eventLoop.makeSucceededFuture(()) }
+        
+        return CollateralizationLastKnownBlock(
+            blockNumber: block,
+            date: Date()
+        ).save(on: db)
     }
     
     private func getAllMatchingAllerts(

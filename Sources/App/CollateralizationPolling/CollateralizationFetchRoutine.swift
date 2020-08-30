@@ -18,7 +18,7 @@ struct FetchedCollateralizationAlert {
 }
 
 struct CollateralizationPollingFetchResult {
-    let latestBlock: EthereumQuantityTag
+    let latestBlock: String?
     
     // Operator address -> alerts
     let alerts: [String: [FetchedCollateralizationAlert]]
@@ -40,7 +40,7 @@ struct CollateralizationFetchRoutine {
             address: TBTCSystemContract.testNetAddress,
             event: TBTCSystemContract.CourtesyCalled,
             fromBlock: fromBlock
-        ).map { self.process(currentTag: self.fromBlock, events: $0) }
+        ).map(process)
         .flatMap { actualEvents, newTag in
             self.createAlerts(for: actualEvents).map { CollateralizationPollingFetchResult(latestBlock: newTag, alerts: $0) }
         }
@@ -54,22 +54,20 @@ struct CollateralizationFetchRoutine {
     }
     
     private func process(
-        currentTag: EthereumQuantityTag,
         events: [EventContainer<CourtesyCalledEventData>]
-    ) -> (actualEvents: Set<EventContainer<CourtesyCalledEventData>>, newTag: EthereumQuantityTag) {
+    ) -> (actualEvents: Set<EventContainer<CourtesyCalledEventData>>, newTag: String?) {
         let sortedEvents = events.sorted { $0.data.timestamp > $1.data.timestamp }
         let filteredEvents = sortedEvents
             .filter { -$0.data.timestamp.timeIntervalSinceNow < Self.maxAlertAge }
         
-        let newTag: EthereumQuantityTag
-        if let startEventTag = sortedEvents.first(where: { -$0.data.timestamp.timeIntervalSinceNow >= Self.maxAlertAge })?.log.blockNumber {
-            newTag = (try? EthereumQuantityTag(ethereumValue: startEventTag)) ?? currentTag
-        } else {
-            newTag = currentTag
-        }
-        
+        let newTagData = sortedEvents
+            .first(where: { -$0.data.timestamp.timeIntervalSinceNow >= Self.maxAlertAge })?
+            .log
+            .blockNumber?
+            .hex()
+    
         let eventsSet = Set(filteredEvents)
-        return (eventsSet, newTag)
+        return (eventsSet, newTagData)
     }
     
     private func getDepositState(

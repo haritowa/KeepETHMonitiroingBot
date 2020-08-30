@@ -23,6 +23,7 @@ private func setupDatabase(app: Application) throws {
     
     app.migrations.add(CreateAlertMonitor())
     app.migrations.add(AddLatestReportedValue())
+    app.migrations.add(CreateCollateralizationLastKnownBlock())
 }
 
 private func setupQueues(app: Application) throws {
