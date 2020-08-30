@@ -112,11 +112,7 @@ struct CollateralizationAlertsOperation {
         let endDate = alert.date.addingTimeInterval(Self.callLength)
         let remainingInterval = endDate.timeIntervalSince(Date())
         
-        let formattedRemainigTime = remainingInterval.format(using: [.hour, .minute]).map { time in
-            "You have \(time) until the auction starts"
-        } ?? ""
-        
-        return "⚠️ Your operator \(createEtherscanLink(for: operatorAddress)) have undercollateralized deposit \(createEtherscanLink(for: depositAddress)). \(formattedRemainigTime)"
+        return "⚠️ Your operator \(createEtherscanLink(for: operatorAddress)) have undercollateralized deposit \(createEtherscanLink(for: depositAddress)). \(remainingInterval.formatted) until auction starts"
     }
     
     func severelyUndercollateralizedText(for alert: FetchedCollateralizationAlert) -> String {
@@ -161,14 +157,12 @@ struct CollateralizationFetchJob: ScheduledJob {
     }
 }
 
-extension TimeInterval {
-    func format(using units: NSCalendar.Unit) -> String? {
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = units
-        formatter.unitsStyle = .abbreviated
-        formatter.zeroFormattingBehavior = .pad
-
-        return formatter.string(from: self)
+private extension TimeInterval {
+    var formatted: String {
+        let interval = Int(self)
+        let seconds = interval % 60
+        let minutes = (interval / 60) % 60
+        let hours = (interval / 3600)
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
 }
-
