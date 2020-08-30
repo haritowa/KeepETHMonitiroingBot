@@ -254,6 +254,15 @@
         }
       },
       {
+        "package": "SwiftDate",
+        "repositoryURL": "https://github.com/malcommac/SwiftDate.git",
+        "state": {
+          "branch": null,
+          "revision": "ed308a5afb97a3874300b761dad6e9966269e3e7",
+          "version": "5.1.0"
+        }
+      },
+      {
         "package": "vapor",
         "repositoryURL": "https://github.com/vapor/vapor.git",
         "state": {

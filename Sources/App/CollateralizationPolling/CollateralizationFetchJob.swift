@@ -12,6 +12,7 @@ import Fluent
 import Web3
 
 import Queues
+import SwiftDate
 
 struct CollateralizationAlertsOperation {
     private static let callLength = TimeInterval(60*60*6)
@@ -112,9 +113,12 @@ struct CollateralizationAlertsOperation {
         let endDate = alert.date.addingTimeInterval(Self.callLength)
         let remainingInterval = endDate.timeIntervalSince(Date())
         
-        let formattedRemainigTime = remainingInterval.format(using: [.hour, .minute]).map { time in
-            "You have \(time) until the auction starts"
-        } ?? ""
+        let formattedRemainigTime = remainingInterval.toString {
+            $0.maximumUnitCount = 4
+            $0.allowedUnits = [.day, .hour, .minute]
+            $0.collapsesLargestUnit = true
+            $0.unitsStyle = .abbreviated
+        }
         
         return "⚠️ Your operator \(createEtherscanLink(for: operatorAddress)) have undercollateralized deposit \(createEtherscanLink(for: depositAddress)). \(formattedRemainigTime)"
     }
@@ -160,15 +164,3 @@ struct CollateralizationFetchJob: ScheduledJob {
         ).run()
     }
 }
-
-extension TimeInterval {
-    func format(using units: NSCalendar.Unit) -> String? {
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = units
-        formatter.unitsStyle = .abbreviated
-        formatter.zeroFormattingBehavior = .pad
-
-        return formatter.string(from: self)
-    }
-}
-
