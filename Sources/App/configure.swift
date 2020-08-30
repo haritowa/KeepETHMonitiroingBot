@@ -39,6 +39,13 @@ private func setupQueues(app: Application) throws {
     app.queues.schedule(SetTelegramCommandsJob())
         .at(Date(timeIntervalSinceNow: 5))
     
+    app.queues.schedule(CollateralizationFetchJob())
+        .hourly()
+        .at(10)
+    
+    app.queues.schedule(CollateralizationFetchJob())
+        .at(Date(timeIntervalSinceNow: 30))
+    
     try app.queues.startScheduledJobs()
 }
 

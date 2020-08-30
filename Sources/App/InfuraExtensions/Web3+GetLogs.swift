@@ -32,6 +32,11 @@ struct EventContainer<Data: EventDataProtocol> {
     let data: Data
     let log: EthereumLogObject
     
+    init(data: Data, log: EthereumLogObject) {
+        self.data = data
+        self.log = log
+    }
+    
     init?(data: [String: Any], log: EthereumLogObject) {
         guard let eventData = Data(args: data) else { return nil }
         

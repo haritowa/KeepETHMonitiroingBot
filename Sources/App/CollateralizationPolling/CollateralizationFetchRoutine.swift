@@ -34,16 +34,21 @@ struct CollateralizationFetchRoutine {
     let keepClient: KeepClientProtocol
     
     func perform() -> EventLoopFuture<CollateralizationPollingFetchResult> {
+        getEvents()
+        .map(process)
+        .flatMap { actualEvents, newTag in
+            self.createAlerts(for: actualEvents).map { CollateralizationPollingFetchResult(latestBlock: newTag, alerts: $0) }
+        }
+    }
+    
+    private func getEvents() -> EventLoopFuture<[EventContainer<CourtesyCalledEventData>]> {
         web3.eth.getEvents(
             data: CourtesyCalledEventData.self,
             eventLoop: eventLoop,
             address: TBTCSystemContract.testNetAddress,
             event: TBTCSystemContract.CourtesyCalled,
             fromBlock: fromBlock
-        ).map(process)
-        .flatMap { actualEvents, newTag in
-            self.createAlerts(for: actualEvents).map { CollateralizationPollingFetchResult(latestBlock: newTag, alerts: $0) }
-        }
+        )
     }
     
     private func createAlerts(

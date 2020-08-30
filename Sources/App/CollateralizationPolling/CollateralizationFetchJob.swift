@@ -14,6 +14,8 @@ import Web3
 import Queues
 
 struct CollateralizationAlertsOperation {
+    private static let callLength = TimeInterval(60*60*6)
+    
     private let telegramClient: TelegramClientProtocol
     private let keepClient: KeepClientProtocol
     private let web3: Web3
@@ -83,6 +85,7 @@ struct CollateralizationAlertsOperation {
             .query(on: db)
             .filter(\.$operatorAddress ~~ operators)
             .field(\.$telegramDialogueID)
+            .field(\.$operatorAddress)
             .all()
     }
     
@@ -106,7 +109,10 @@ struct CollateralizationAlertsOperation {
         let operatorAddress = alert.operatorAddress.hex(eip55: true)
         let depositAddress = alert.depositAddress.hex(eip55: true)
         
-        let formattedRemainigTime = alert.date.timeIntervalSinceNow.format(using: [.hour, .minute]).map { time in
+        let endDate = alert.date.addingTimeInterval(Self.callLength)
+        let remainingInterval = endDate.timeIntervalSince(Date())
+        
+        let formattedRemainigTime = remainingInterval.format(using: [.hour, .minute]).map { time in
             "You have \(time) until the auction starts"
         } ?? ""
         

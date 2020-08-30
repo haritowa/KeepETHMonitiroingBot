@@ -66,6 +66,11 @@ struct CourtesyCalledEventData: EventDataProtocol, Hashable {
         hasher.combine(depositContractAddress)
     }
     
+    init(depositContractAddress: EthereumAddress, timestamp: Date) {
+        self.depositContractAddress = depositContractAddress
+        self.timestamp = timestamp
+    }
+    
     init?(args: [String : Any]) {
         guard let depositContractAddressValue: EthereumAddress = args.cast(for: "_depositContractAddress"),
             let timestampValue: BigUInt = args.cast(for: "_timestamp") else {
