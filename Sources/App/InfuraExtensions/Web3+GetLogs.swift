@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Vapor
 
 import Web3
 import Web3ContractABI
@@ -16,6 +17,31 @@ struct EtherumLogsRequest: Codable {
     let toBlock: EthereumQuantityTag
     let topics: [EthereumData]?
 }
+
+protocol EventDataProtocol {
+    init?(args: [String: Any])
+}
+
+extension Dictionary where Key == String, Value == Any {
+    func cast<T>(for key: String) -> T? {
+        self[key] as? T
+    }
+}
+
+struct EventContainer<Data: EventDataProtocol> {
+    let data: Data
+    let log: EthereumLogObject
+    
+    init?(data: [String: Any], log: EthereumLogObject) {
+        guard let eventData = Data(args: data) else { return nil }
+        
+        self.data = eventData
+        self.log = log
+    }
+}
+
+extension EventContainer: Equatable where Data: Equatable {}
+extension EventContainer: Hashable where Data: Hashable { }
 
 extension Web3.Eth {
     func getLogs(
@@ -67,5 +93,37 @@ extension Web3.Eth {
             
             response(decodedEvents)
         }
+    }
+    
+    func getEvents<Data: EventDataProtocol>(
+        data: Data.Type = Data.self,
+        eventLoop: EventLoop,
+        address: EthereumAddress,
+        event: SolidityEvent,
+        fromBlock: EthereumQuantityTag = .earliest,
+        toBlock: EthereumQuantityTag = .latest
+    ) -> EventLoopFuture<[EventContainer<Data>]> {
+        let signature = EthereumData(ABI.encodeEventSignature(event).hexToBytes())
+        let promise: EventLoopPromise<[EventContainer<Data>]> = eventLoop.makePromise()
+        
+        getLogs(
+            address: address,
+            fromBlock: fromBlock,
+            toBlock: toBlock,
+            topics: [signature])
+        { getLogsResponse in
+            let result = getLogsResponse.asResult()
+            
+            let decodedEvents = result.map { logs in
+                logs.compactMap { log -> EventContainer<Data>? in
+                    let args = try? ABI.decodeLog(event: event, from: log)
+                    return args.flatMap { EventContainer<Data>(data: $0, log: log) }
+                }
+            }
+            
+            promise.completeWith(decodedEvents)
+        }
+        
+        return promise.futureResult
     }
 }

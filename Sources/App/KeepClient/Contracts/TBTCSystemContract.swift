@@ -39,3 +39,40 @@ class TBTCSystemContract: GenericERC20Contract {
         return SolidityEvent(name: "CourtesyCalled", anonymous: false, inputs: inputs)
     }
 }
+
+struct CreatedEventData: EventDataProtocol {
+    let depositContractAddress: EthereumAddress
+    let keepAddress: EthereumAddress
+    let timestamp: BigUInt
+    
+    init?(args: [String : Any]) {
+        guard let depositContractAddressValue: EthereumAddress = args.cast(for: "_depositContractAddress"),
+            let keepAddressValue: EthereumAddress = args.cast(for: "_keepAddress"),
+            let timestampValue: BigUInt = args.cast(for: "_timestamp") else {
+                return nil
+        }
+        
+        depositContractAddress = depositContractAddressValue
+        keepAddress = keepAddressValue
+        timestamp = timestampValue
+    }
+}
+
+struct CourtesyCalledEventData: EventDataProtocol, Hashable {
+    let depositContractAddress: EthereumAddress
+    let timestamp: Date
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(depositContractAddress)
+    }
+    
+    init?(args: [String : Any]) {
+        guard let depositContractAddressValue: EthereumAddress = args.cast(for: "_depositContractAddress"),
+            let timestampValue: BigUInt = args.cast(for: "_timestamp") else {
+                return nil
+        }
+        
+        depositContractAddress = depositContractAddressValue
+        timestamp = Date(timeIntervalSince1970: Double(timestampValue))
+    }
+}
