@@ -11,7 +11,7 @@ import Web3
 import Web3ContractABI
 
 class KeepBondingContract: GenericERC20Contract {
-    static let testNetAddress = EthereumAddress(hexString: "0x90D813F6DF3FFDc73Eb571FE322F5321a6C97E24")!
+    static let testNetAddress = EthereumAddress(hexString: "0x60535A59B4e71F908f3fEB0116F450703FB35eD8")!
     
     func unbondedValue(operatorAddress: EthereumAddress) -> SolidityInvocation {
         let inputs = [SolidityFunctionParameter(name: "address", type: .address)]
