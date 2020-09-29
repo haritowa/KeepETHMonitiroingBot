@@ -47,7 +47,7 @@ extension Request {
     }
     
     var web3Provider: Web3VaporProvider {
-        web3Provider(rpcURL: "https://ropsten.infura.io/v3/\(Environment.get("INFURA_PROJECT_ID") ?? "")")
+        web3Provider(rpcURL: "https://mainnet.infura.io/v3/\(Environment.get("INFURA_PROJECT_ID") ?? "")")
     }
 }
 
@@ -57,6 +57,6 @@ extension Application {
     }
     
     var web3Provider: Web3VaporProvider {
-        web3Provider(rpcURL: "https://ropsten.infura.io/v3/\(Environment.get("INFURA_PROJECT_ID") ?? "")")
+        web3Provider(rpcURL: "https://mainnet.infura.io/v3/\(Environment.get("INFURA_PROJECT_ID") ?? "")")
     }
 }

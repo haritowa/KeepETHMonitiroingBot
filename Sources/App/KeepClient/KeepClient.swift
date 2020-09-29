@@ -44,7 +44,7 @@ class KeepClient: KeepClientProtocol {
     }
     
     func unbondedValue(operatorAddress: EthereumAddress) -> EventLoopFuture<BigUInt> {
-        web3.eth.Contract(type: KeepBondingContract.self, address: KeepBondingContract.testNetAddress)
+        web3.eth.Contract(type: KeepBondingContract.self, address: KeepBondingContract.contractAddress)
             .unbondedValue(operatorAddress: operatorAddress)
             .callAndExtract(eventLoop: eventLoop)
     }
@@ -79,13 +79,13 @@ class KeepClient: KeepClientProtocol {
     }
     
     private func getTBTCSoritonPool(for operatorAddress: EthereumAddress) -> EventLoopFuture<EthereumAddress> {
-        web3.eth.Contract(type: BondedECDSAKeepFactoryContract.self, address: BondedECDSAKeepFactoryContract.testNetAddress)
-            .getSortitionPool(applicationAddress: TBTCSystemContract.testNetAddress)
+        web3.eth.Contract(type: BondedECDSAKeepFactoryContract.self, address: BondedECDSAKeepFactoryContract.contractAddress)
+            .getSortitionPool(applicationAddress: TBTCSystemContract.contractAddress)
             .callAndExtract(eventLoop: eventLoop)
     }
     
     private func hasContractAuthorization(for operatorAddress: EthereumAddress, sortitionPool: EthereumAddress) -> EventLoopFuture<Bool> {
-        web3.eth.Contract(type: KeepBondingContract.self, address: KeepBondingContract.testNetAddress)
+        web3.eth.Contract(type: KeepBondingContract.self, address: KeepBondingContract.contractAddress)
             .hasSecondaryAuthorization(operatorAddress: operatorAddress, sortitionPool: sortitionPool)
             .callAndExtract(eventLoop: eventLoop)
     }
