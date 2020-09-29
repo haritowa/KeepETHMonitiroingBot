@@ -45,7 +45,7 @@ struct CollateralizationFetchRoutine {
         web3.eth.getEvents(
             data: CourtesyCalledEventData.self,
             eventLoop: eventLoop,
-            address: TBTCSystemContract.testNetAddress,
+            address: TBTCSystemContract.contractAddress,
             event: TBTCSystemContract.CourtesyCalled,
             fromBlock: fromBlock
         )

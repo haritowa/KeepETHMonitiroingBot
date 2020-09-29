@@ -11,7 +11,7 @@ import Web3
 import Web3ContractABI
 
 class TBTCSystemContract: GenericERC20Contract {
-    static let testNetAddress = EthereumAddress(hexString: "0xc3f96306eDabACEa249D2D22Ec65697f38c6Da69")!
+    static let contractAddress = EthereumAddress(hexString: "0xe20A5C79b39bC8C363f0f49ADcFa82C2a01ab64a")!
     
     open override var events: [SolidityEvent] {
         var superEvents = super.events
