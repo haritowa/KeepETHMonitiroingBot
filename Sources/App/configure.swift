@@ -6,10 +6,13 @@ import FluentPostgresDriver
 import Queues
 import QueuesRedisDriver
 
+import Bugsnag
+
 // configures your application
 public func configure(_ app: Application) throws {
     try setupDatabase(app: app)
     try setupQueues(app: app)
+    setupBugsnap(app: app)
     try setupRoutes(app: app)
 }
 
@@ -51,4 +54,20 @@ private func setupQueues(app: Application) throws {
 
 private func setupRoutes(app: Application) throws {
     try routes(app)
+}
+
+private func setupBugsnap(app: Application) {
+    guard let bugsnapAPIKey = Environment.get("BUGSNAP_API_KEY") else {
+        print("Warning: not using bugsnap")
+        return
+    }
+    
+    app.bugsnag.configuration = .init(
+        apiKey: bugsnapAPIKey,
+        releaseStage: app.environment.name,
+        shouldReport: app.environment.name != "local"
+    )
+
+    // Add Bugsnag middleware.
+    app.middleware.use(BugsnagMiddleware())
 }

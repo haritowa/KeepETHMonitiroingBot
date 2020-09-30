@@ -12,7 +12,8 @@ let package = Package(
         .package(name: "Web3", url: "https://github.com/Boilertalk/Web3.swift.git", from: "0.4.0"),
         .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
         .package(url: "https://github.com/vapor/fluent-postgres-driver.git", from: "2.0.0"),
-        .package(url: "https://github.com/vapor/queues-redis-driver.git", from: "1.0.0-rc.3")
+        .package(url: "https://github.com/vapor/queues-redis-driver.git", from: "1.0.0-rc.3"),
+        .package(url: "https://github.com/nodes-vapor/bugsnag.git", .branch("4.0.0-rc.1"))        
     ],
     targets: [
         .target(
@@ -23,7 +24,8 @@ let package = Package(
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "Web3", package: "Web3"),
                 .product(name: "Web3ContractABI", package: "Web3"),
-                .product(name: "QueuesRedisDriver", package: "queues-redis-driver")
+                .product(name: "QueuesRedisDriver", package: "queues-redis-driver"),
+                .product(name: "Bugsnag", package: "bugsnag"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
